@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react'; // <-- Adicionado useEffect
 import { 
   View, 
   Animated, 
@@ -16,18 +16,26 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 export default function FeedScreen() {
   const [activeTab, setActiveTab] = useState<'forYou' | 'following'>('forYou');
   
-  // 1. Animated Value que rastreia a posição real do scroll (para o efeito Blur)
   const scrollY = useRef(new Animated.Value(0)).current; 
-  // 2. Animated Value que controlará a translação do Header (para esconder/mostrar)
   const headerTranslateY = useRef(new Animated.Value(0)).current; 
   
   const insets = useSafeAreaInsets();
-  const HEADER_HEIGHT = 110; // Altura do Header (deve ser consistente com o TopHeader.tsx)
+  const HEADER_HEIGHT = 110; 
   const HEADER_HEIGHT_COMPENSATE = HEADER_HEIGHT + insets.top; 
 
   const lastScrollY = useRef(0);
+  
+  // Ref para armazenar o valor numérico atual (sincronizado) da animação
+  const headerTranslateYValue = useRef(0); 
 
-  // Função para capturar a posição do scroll com tipagem correta
+  // Efeito para sincronizar o valor animado com a ref (solução segura para o erro de tipagem)
+  useEffect(() => {
+    const id = headerTranslateY.addListener((value) => {
+      headerTranslateYValue.current = value.value;
+    });
+    return () => headerTranslateY.removeListener(id);
+  }, [headerTranslateY]); // O array de dependências garante que o listener seja atualizado corretamente
+
   const handleScroll = Animated.event(
     [{ nativeEvent: { contentOffset: { y: scrollY } } }],
     {
@@ -36,16 +44,16 @@ export default function FeedScreen() {
         const currentScrollY = event.nativeEvent.contentOffset.y;
         const diff = currentScrollY - lastScrollY.current;
 
-        // Delta mínimo para considerar a rolagem como intencional (evita tremores)
         if (Math.abs(diff) < 3) return; 
 
-        // 1. Determina a direção e verifica o estado atual
+        // Agora, usamos a ref sincronizada, que é um number
+        const isHeaderCurrentlyVisible = headerTranslateYValue.current >= 0;
+        
         const isScrollingDown = diff > 0;
-        const isHeaderFullyVisible = headerTranslateY.__getValue() === 0;
 
         // 2. Condição para ESCONDER o Header
-        // Esconde se estiver rolando para baixo E a rolagem já saiu da área superior E o header está visível
-        if (isScrollingDown && currentScrollY > HEADER_HEIGHT && isHeaderFullyVisible) {
+        // Esconde se estiver rolando para baixo E o header estiver visível E a rolagem já saiu da área superior
+        if (isScrollingDown && currentScrollY > HEADER_HEIGHT && isHeaderCurrentlyVisible) {
             Animated.timing(headerTranslateY, {
                 toValue: -HEADER_HEIGHT, // Posição totalmente escondida
                 duration: 200, 
@@ -54,7 +62,7 @@ export default function FeedScreen() {
         }
         
         // 3. Condição para MOSTRAR o Header
-        // Mostra se estiver rolando para cima OU se estiver rolando para cima o suficiente
+        // Mostra se estiver rolando para cima
         else if (diff < 0) {
             Animated.timing(headerTranslateY, {
                 toValue: 0, // Posição totalmente visível
@@ -63,7 +71,7 @@ export default function FeedScreen() {
             }).start();
         }
 
-        // 4. Correção: Evita que o lastScrollY seja atualizado se a rolagem for muito pequena
+        // 4. Atualiza a última posição de rolagem
         lastScrollY.current = currentScrollY;
       },
     }
