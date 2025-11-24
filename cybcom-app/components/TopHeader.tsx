@@ -1,9 +1,9 @@
 import React from 'react';
-import { Platform, TouchableOpacity, StyleSheet, View, TextStyle, ViewStyle } from 'react-native';
+import { Platform, TouchableOpacity, StyleSheet, View, TextStyle, Image } from 'react-native';
 import Animated, { useAnimatedStyle, SharedValue, interpolate, Extrapolation } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Text } from '@/components/ui/text';
 import { BlurView } from 'expo-blur';
+import { Text } from '@/components/ui/text'; 
 
 interface TopHeaderProps {
   activeTab: 'forYou' | 'following';
@@ -15,14 +15,12 @@ interface TopHeaderProps {
 export function TopHeader({ activeTab, onChangeTab, headerTranslateY, fullHeight = 100 }: TopHeaderProps) {
   const insets = useSafeAreaInsets();
 
-  // Estilo do CONTAINER (Movimento Vertical)
   const containerStyle = useAnimatedStyle(() => {
     return {
       transform: [{ translateY: headerTranslateY.value }],
     };
   });
 
-  // Estilo do CONTEÚDO (Transparência/Fade Out)
   const contentStyle = useAnimatedStyle(() => {
     const opacity = interpolate(
       headerTranslateY.value,
@@ -33,58 +31,73 @@ export function TopHeader({ activeTab, onChangeTab, headerTranslateY, fullHeight
     return { opacity };
   });
 
-  // Funções auxiliares tipadas para garantir cores corretas e satisfazer o TypeScript
-  const getButtonStyle = (isActive: boolean): ViewStyle => ({
-    backgroundColor: isActive ? '#FFFFFF' : '#1a1a1a', // Branco (Ativo) vs Cinza Escuro (Inativo)
-  });
-
+  // Texto: Branco (Ativo) vs Cinza (Inativo)
   const getTextStyle = (isActive: boolean): TextStyle => ({
-    color: isActive ? '#000000' : '#888888', // Preto (Ativo) vs Cinza (Inativo)
-    fontWeight: isActive ? '600' : '500', // Tipagem corrigida para aceitar "600" | "500"
+    color: isActive ? '#FFFFFF' : '#71767B', 
+    fontWeight: isActive ? '700' : '500',
+    fontSize: 15,
   });
 
   return (
     <Animated.View
       style={[
         styles.container,
-        { paddingTop: insets.top + 8 },
+        { paddingTop: insets.top + 5 },
         containerStyle, 
       ]}
     >
        {Platform.OS !== 'web' && (
         <BlurView
-            intensity={80}
+            intensity={90}
             tint="dark"
             style={StyleSheet.absoluteFill}
         />
         )}
 
       <Animated.View style={[styles.contentContainer, contentStyle]}>
-        <Text className="text-2xl font-bold text-white mb-3 pl-4">Feed</Text>
+        
+        {/* LOGO */}
+        <View style={styles.logoContainer}>
+          <Image 
+            source={require('../assets/images/logo-cybcom-sem-fundoPNG.png')} 
+            style={styles.logo}
+            resizeMode="contain"
+          />
+        </View>
 
-        <View className="flex-row gap-2 px-4 pb-2">
+        {/* ABAS */}
+        <View style={styles.tabsRow}>
           {/* Botão PARA VOCÊ */}
           <TouchableOpacity
             onPress={() => onChangeTab('forYou')}
-            style={[styles.tab, getButtonStyle(activeTab === 'forYou')]}
+            style={styles.tab}
             activeOpacity={0.7}
           >
-            <Text style={[styles.tabText, getTextStyle(activeTab === 'forYou')]}>
-              Para Você
-            </Text>
+            <View style={styles.tabContent}>
+              <Text style={getTextStyle(activeTab === 'forYou')}>
+                Para você
+              </Text>
+              {/* TRAÇO #64FFDA */}
+              {activeTab === 'forYou' && <View style={styles.indicator} />}
+            </View>
           </TouchableOpacity>
 
           {/* Botão SEGUINDO */}
           <TouchableOpacity
             onPress={() => onChangeTab('following')}
-            style={[styles.tab, getButtonStyle(activeTab === 'following')]}
+            style={styles.tab}
             activeOpacity={0.7}
           >
-            <Text style={[styles.tabText, getTextStyle(activeTab === 'following')]}>
-              Seguindo
-            </Text>
+            <View style={styles.tabContent}>
+              <Text style={getTextStyle(activeTab === 'following')}>
+                Seguindo
+              </Text>
+              {/* TRAÇO #64FFDA */}
+              {activeTab === 'following' && <View style={styles.indicator} />}
+            </View>
           </TouchableOpacity>
         </View>
+
       </Animated.View>
     </Animated.View>
   );
@@ -97,22 +110,45 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     zIndex: 1000,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(0,0,0,0.75)', 
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.1)',
+    borderBottomColor: '#2F3336', 
   },
   contentContainer: {
-    // Container interno
+    paddingBottom: 0, 
+  },
+  logoContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 44, 
+  },
+  logo: {
+    width: 28, 
+    height: 28,
+  },
+  tabsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: 44, 
   },
   tab: {
     flex: 1,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 9999, // Pill shape
+    height: '100%',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  tabText: {
-    fontSize: 14,
+  tabContent: {
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+  },
+  indicator: {
+    position: 'absolute',
+    bottom: 0, 
+    width: 56, 
+    height: 4, 
+    backgroundColor: '#64FFDA', // <--- COR ALTERADA AQUI
+    borderRadius: 2, 
   }
 });

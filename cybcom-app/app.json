@@ -4,7 +4,10 @@
     "slug": "cybcom-app",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    
+    // 1. Ícone Principal (PNG é o ideal)
+    "icon": "./assets/images/logo-cybcomPNG.png",
+    
     "scheme": "cybcomapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -13,10 +16,9 @@
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+        "backgroundColor": "#000000",
+        // 2. Ícone Adaptativo
+        "foregroundImage": "./assets/images/logo-cybcomPNG.png"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
@@ -24,17 +26,19 @@
     },
     "web": {
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      // 3. Favicon
+      "favicon": "./assets/images/logo-cybcomPNG.png"
     },
     "plugins": [
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon.png",
+          // 4. Splash Screen (Tela de abertura)
+          "image": "./assets/images/logo-cybcomPNG.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#ffffff",
+          "backgroundColor": "#000000",
           "dark": {
             "backgroundColor": "#000000"
           }
