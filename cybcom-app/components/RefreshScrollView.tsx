@@ -1,12 +1,11 @@
 import React, { useState, useCallback } from "react";
-import { ScrollView, ScrollViewProps, RefreshControl } from "react-native";
-// Se não for usar o colorScheme para mais nada, pode remover o hook também
-// import { useColorScheme } from "nativewind"; 
+import { RefreshControl, ScrollViewProps } from "react-native";
+import Animated from "react-native-reanimated";
 
 type RefreshScrollViewProps = {
   children: React.ReactNode;
   onRefresh?: () => Promise<void>;
-  scrollViewProps?: ScrollViewProps;
+  scrollViewProps?: ScrollViewProps & { onScroll?: any; scrollEventThrottle?: number }; // Tipagem flexível para o Reanimated
 };
 
 export function RefreshScrollView({
@@ -15,11 +14,6 @@ export function RefreshScrollView({
   scrollViewProps,
 }: RefreshScrollViewProps) {
   const [refreshing, setRefreshing] = useState(false);
-  
-  // Removi o hook useColorScheme e a const isDark pois estamos forçando o dark mode
-  
-  // Forçando estilo dark para imitar o app de referência
-  const bgColor = "bg-black"; 
 
   const handleRefresh = useCallback(async () => {
     if (onRefresh) {
@@ -35,17 +29,16 @@ export function RefreshScrollView({
   }, [onRefresh]);
 
   return (
-    <ScrollView
+    <Animated.ScrollView
       {...scrollViewProps}
-      className={`flex-1 ${bgColor}`}
-      // Garante que o estilo passado via props tenha prioridade se existir
-      style={[scrollViewProps?.style]} 
+      // Garante flex: 1 e fundo preto, mesclando com estilos externos se houver
+      style={[{ flex: 1, backgroundColor: '#000' }, scrollViewProps?.style]}
       refreshControl={
         onRefresh ? (
           <RefreshControl
             refreshing={refreshing}
             onRefresh={handleRefresh}
-            tintColor="#fff" // Branco para combinar com o fundo preto
+            tintColor="#fff"
             colors={["#fff"]}
             progressBackgroundColor="#1a1a1a"
           />
@@ -53,6 +46,6 @@ export function RefreshScrollView({
       }
     >
       {children}
-    </ScrollView>
+    </Animated.ScrollView>
   );
 }

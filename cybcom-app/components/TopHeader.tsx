@@ -1,45 +1,39 @@
 import React from 'react';
-import { Animated, Platform, TouchableOpacity, View } from 'react-native';
+import { Platform, TouchableOpacity, View, StyleSheet } from 'react-native';
+import Animated, { useAnimatedStyle, SharedValue, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Text } from '@/components/ui/text'; // Usando seu componente de texto
+import { Text } from '@/components/ui/text';
 import { BlurView } from 'expo-blur';
 
 interface TopHeaderProps {
   activeTab: 'forYou' | 'following';
   onChangeTab: (tab: 'forYou' | 'following') => void;
-  headerTranslateY: Animated.Value;
+  headerTranslateY: SharedValue<number>; // Agora é um SharedValue
 }
 
 export function TopHeader({ activeTab, onChangeTab, headerTranslateY }: TopHeaderProps) {
   const insets = useSafeAreaInsets();
 
+  // Estilo animado rodando na UI Thread
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ translateY: withTiming(headerTranslateY.value, { duration: 600 }) }],
+    };
+  });
+
   return (
     <Animated.View
-      style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        zIndex: 1000,
-        paddingTop: insets.top + 8,
-        transform: [{ translateY: headerTranslateY }],
-      }}
-      className="bg-black border-b border-outline-800 pb-2 shadow-sm"
+      style={[
+        styles.container,
+        { paddingTop: insets.top + 8 },
+        animatedStyle, // Aplica a animação aqui
+      ]}
     >
-       {/* Efeito de Blur no fundo do Header (Opcional, igual ao StatusBar) */}
        {Platform.OS !== 'web' && (
         <BlurView
             intensity={90}
             tint="dark"
-            style={[
-            {
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-            },
-            ]}
+            style={StyleSheet.absoluteFill}
         />
         )}
 
@@ -81,3 +75,18 @@ export function TopHeader({ activeTab, onChangeTab, headerTranslateY }: TopHeade
     </Animated.View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 1000,
+    // Removi a cor sólida daqui para deixar o BlurView brilhar, 
+    // ou use 'rgba(0,0,0,0.8)' se preferir mais escuro.
+    backgroundColor: 'rgba(0,0,0,0.6)', 
+    borderBottomWidth: 1,
+    borderBottomColor: '#262626',
+  }
+});
