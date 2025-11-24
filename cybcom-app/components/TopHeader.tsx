@@ -1,6 +1,6 @@
 import React from 'react';
-import { Platform, TouchableOpacity, View, StyleSheet } from 'react-native';
-import Animated, { useAnimatedStyle, SharedValue, withTiming } from 'react-native-reanimated';
+import { Platform, TouchableOpacity, StyleSheet, View, TextStyle, ViewStyle } from 'react-native';
+import Animated, { useAnimatedStyle, SharedValue, interpolate, Extrapolation } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text } from '@/components/ui/text';
 import { BlurView } from 'expo-blur';
@@ -8,17 +8,39 @@ import { BlurView } from 'expo-blur';
 interface TopHeaderProps {
   activeTab: 'forYou' | 'following';
   onChangeTab: (tab: 'forYou' | 'following') => void;
-  headerTranslateY: SharedValue<number>; // Agora é um SharedValue
+  headerTranslateY: SharedValue<number>;
+  fullHeight?: number;
 }
 
-export function TopHeader({ activeTab, onChangeTab, headerTranslateY }: TopHeaderProps) {
+export function TopHeader({ activeTab, onChangeTab, headerTranslateY, fullHeight = 100 }: TopHeaderProps) {
   const insets = useSafeAreaInsets();
 
-  // Estilo animado rodando na UI Thread
-  const animatedStyle = useAnimatedStyle(() => {
+  // Estilo do CONTAINER (Movimento Vertical)
+  const containerStyle = useAnimatedStyle(() => {
     return {
-      transform: [{ translateY: withTiming(headerTranslateY.value, { duration: 600 }) }],
+      transform: [{ translateY: headerTranslateY.value }],
     };
+  });
+
+  // Estilo do CONTEÚDO (Transparência/Fade Out)
+  const contentStyle = useAnimatedStyle(() => {
+    const opacity = interpolate(
+      headerTranslateY.value,
+      [-fullHeight * 0.8, 0], 
+      [0, 1],
+      Extrapolation.CLAMP
+    );
+    return { opacity };
+  });
+
+  // Funções auxiliares tipadas para garantir cores corretas e satisfazer o TypeScript
+  const getButtonStyle = (isActive: boolean): ViewStyle => ({
+    backgroundColor: isActive ? '#FFFFFF' : '#1a1a1a', // Branco (Ativo) vs Cinza Escuro (Inativo)
+  });
+
+  const getTextStyle = (isActive: boolean): TextStyle => ({
+    color: isActive ? '#000000' : '#888888', // Preto (Ativo) vs Cinza (Inativo)
+    fontWeight: isActive ? '600' : '500', // Tipagem corrigida para aceitar "600" | "500"
   });
 
   return (
@@ -26,52 +48,44 @@ export function TopHeader({ activeTab, onChangeTab, headerTranslateY }: TopHeade
       style={[
         styles.container,
         { paddingTop: insets.top + 8 },
-        animatedStyle, // Aplica a animação aqui
+        containerStyle, 
       ]}
     >
        {Platform.OS !== 'web' && (
         <BlurView
-            intensity={90}
+            intensity={80}
             tint="dark"
             style={StyleSheet.absoluteFill}
         />
         )}
 
-      <View className="px-4 pb-2">
-        <Text className="text-2xl font-bold text-white mb-3">Feed</Text>
+      <Animated.View style={[styles.contentContainer, contentStyle]}>
+        <Text className="text-2xl font-bold text-white mb-3 pl-4">Feed</Text>
 
-        <View className="flex-row gap-2">
+        <View className="flex-row gap-2 px-4 pb-2">
+          {/* Botão PARA VOCÊ */}
           <TouchableOpacity
             onPress={() => onChangeTab('forYou')}
-            className={`flex-1 py-2.5 px-4 rounded-full items-center ${
-              activeTab === 'forYou' ? 'bg-white' : 'bg-background-800'
-            }`}
+            style={[styles.tab, getButtonStyle(activeTab === 'forYou')]}
+            activeOpacity={0.7}
           >
-            <Text
-              className={`text-sm font-semibold ${
-                activeTab === 'forYou' ? 'text-black' : 'text-typography-400'
-              }`}
-            >
+            <Text style={[styles.tabText, getTextStyle(activeTab === 'forYou')]}>
               Para Você
             </Text>
           </TouchableOpacity>
 
+          {/* Botão SEGUINDO */}
           <TouchableOpacity
             onPress={() => onChangeTab('following')}
-            className={`flex-1 py-2.5 px-4 rounded-full items-center ${
-              activeTab === 'following' ? 'bg-white' : 'bg-background-800'
-            }`}
+            style={[styles.tab, getButtonStyle(activeTab === 'following')]}
+            activeOpacity={0.7}
           >
-            <Text
-              className={`text-sm font-semibold ${
-                activeTab === 'following' ? 'text-black' : 'text-typography-400'
-              }`}
-            >
+            <Text style={[styles.tabText, getTextStyle(activeTab === 'following')]}>
               Seguindo
             </Text>
           </TouchableOpacity>
         </View>
-      </View>
+      </Animated.View>
     </Animated.View>
   );
 }
@@ -83,10 +97,22 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     zIndex: 1000,
-    // Removi a cor sólida daqui para deixar o BlurView brilhar, 
-    // ou use 'rgba(0,0,0,0.8)' se preferir mais escuro.
-    backgroundColor: 'rgba(0,0,0,0.6)', 
+    backgroundColor: 'rgba(0,0,0,0.5)',
     borderBottomWidth: 1,
-    borderBottomColor: '#262626',
+    borderBottomColor: 'rgba(255,255,255,0.1)',
+  },
+  contentContainer: {
+    // Container interno
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 9999, // Pill shape
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tabText: {
+    fontSize: 14,
   }
 });

@@ -10,7 +10,7 @@ import { BottomNav } from '@/components/BottomNav';
 import { RefreshScrollView } from '@/components/RefreshScrollView';
 import { StatusBarBlur } from '@/components/StatusBarBlur';
 
-// UI Components (Gluestack/NativeWind)
+// UI Components
 import { Box } from '@/components/ui/box';
 import { Text } from '@/components/ui/text';
 import { Avatar, AvatarFallbackText, AvatarImage } from '@/components/ui/avatar';
@@ -23,43 +23,39 @@ export default function FeedScreen() {
   
   const insets = useSafeAreaInsets();
   const HEADER_HEIGHT = 110;
+  // A altura total que o header precisa percorrer para sumir
   const FULL_HEADER_HEIGHT = HEADER_HEIGHT + insets.top;
-  const SCROLL_THRESHOLD = 20; // Aumentei um pouco para ficar mais estável
 
-  // Valores compartilhados do Reanimated
+  // Valores compartilhados (Reanimated)
   const headerTranslateY = useSharedValue(0);
   const lastScrollY = useSharedValue(0);
 
-  // Lógica de Scroll Corrigida (Acumula o movimento lento)
+  // --- LÓGICA NOVA: FOLLOW THE FINGER (Segue o Dedo) ---
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: (event) => {
       const currentScrollY = event.contentOffset.y;
       const diff = currentScrollY - lastScrollY.value;
 
-      // 1. Regra de Ouro: Se estiver no topo, MOSTRA SEMPRE.
-      if (currentScrollY <= HEADER_HEIGHT) {
+      // Se estivermos no topo absoluto (ou no bounce do iOS), mostre o header
+      if (currentScrollY <= 0) {
         headerTranslateY.value = 0;
-        lastScrollY.value = currentScrollY;
-        return;
+      } else {
+        // Calcula a nova posição baseada no movimento do dedo
+        // Se diff > 0 (descendo), subtraímos (header sobe)
+        // Se diff < 0 (subindo), somamos (header desce)
+        const newTranslateY = headerTranslateY.value - diff;
+
+        // O segredo é limitar (Clamp) o valor entre:
+        // -FULL_HEADER_HEIGHT (totalmente escondido) e 0 (totalmente visível)
+        if (newTranslateY < -FULL_HEADER_HEIGHT) {
+          headerTranslateY.value = -FULL_HEADER_HEIGHT;
+        } else if (newTranslateY > 0) {
+          headerTranslateY.value = 0;
+        } else {
+          headerTranslateY.value = newTranslateY;
+        }
       }
 
-      // 2. O PULO DO GATO: Se a diferença for pequena, PARE AQUI.
-      // NÃO atualizamos o lastScrollY. Isso permite que o movimento lento "se acumule"
-      // até atingir o threshold.
-      if (Math.abs(diff) < SCROLL_THRESHOLD) {
-        return;
-      }
-
-      // 3. Se a diferença foi grande o suficiente, decidimos:
-      if (diff > 0 && headerTranslateY.value === 0) {
-        // Rolando para BAIXO (diff positivo) e header visível -> ESCONDE
-        headerTranslateY.value = -FULL_HEADER_HEIGHT;
-      } else if (diff < 0 && headerTranslateY.value === -FULL_HEADER_HEIGHT) {
-        // Rolando para CIMA (diff negativo) e header escondido -> MOSTRA
-        headerTranslateY.value = 0;
-      }
-
-      // 4. Só agora atualizamos a referência
       lastScrollY.value = currentScrollY;
     },
   });
@@ -82,12 +78,13 @@ export default function FeedScreen() {
         activeTab={activeTab} 
         onChangeTab={setActiveTab} 
         headerTranslateY={headerTranslateY} 
+        fullHeight={FULL_HEADER_HEIGHT} // Passamos a altura para calcular a opacidade
       />
 
       <RefreshScrollView
         onRefresh={onScrollRefresh}
         scrollViewProps={{
-          onScroll: scrollHandler, // Conectado ao Reanimated
+          onScroll: scrollHandler,
           scrollEventThrottle: 16,
           contentContainerStyle: { 
             paddingTop: FULL_HEADER_HEIGHT + 10, 
@@ -97,7 +94,6 @@ export default function FeedScreen() {
       >
         <Box className="flex-1 min-h-screen bg-black">
           <Box className="px-0">
-            {/* Lista de Exemplo */}
             {Array.from({ length: 20 }).map((_, i) => (
               <Box key={i} className="mb-1 border-b border-outline-800 py-4 px-4">
                 <HStack space="md" className="items-start">
@@ -107,7 +103,6 @@ export default function FeedScreen() {
                       source={{ uri: `https://i.pravatar.cc/150?u=${i + 10}` }} 
                     />
                   </Avatar>
-                  
                   <VStack className="flex-1">
                     <HStack className="justify-between items-center mb-1">
                         <HStack space="xs" className="items-center">
@@ -116,11 +111,9 @@ export default function FeedScreen() {
                         </HStack>
                         <Icon as={ThreeDotsIcon} className="text-typography-400" size="sm" />
                     </HStack>
-
                     <Text className="text-white text-base leading-6 mb-3">
-                      Este é o post número {i + 1}. Agora o header deve reagir mesmo se você rolar bem devagarinho! 🐢💨
+                      Post {i + 1}. Agora o header desliza suavemente junto com o seu dedo e o conteúdo vai sumindo! ✨
                     </Text>
-
                     <HStack className="justify-between pr-8">
                         <HStack space="xs" className="items-center">
                             <Icon as={MessageCircleIcon} className="text-typography-400" size="sm" />
