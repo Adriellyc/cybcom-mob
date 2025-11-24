@@ -40,7 +40,7 @@ export function RefreshScrollView({
   return (
     <ScrollView
       {...scrollViewProps}
-      className={`flex-1 ${bgColor}`} // Aplica a cor de fundo aqui
+      className={`flex-1 ${bgColor}`}
       refreshControl={
         onRefresh ? ( // Apenas se onRefresh for fornecido
           <RefreshControl
