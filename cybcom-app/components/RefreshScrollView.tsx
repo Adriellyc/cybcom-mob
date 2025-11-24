@@ -1,13 +1,18 @@
 import React, { useState, useCallback } from "react";
-import type { ScrollViewProps } from "react-native";
-import { ScrollView } from "@/components/ui/scroll-view";
+// Importamos 'Animated' para criar o Animated.ScrollView
+import { Animated, ScrollViewProps } from "react-native";
+// Importamos o componente base para criar o wrapper animado
+import { ScrollView as UIScrollView } from "@/components/ui/scroll-view";
 import { RefreshControl } from "@/components/ui/refresh-control";
 import { useColorScheme } from "nativewind";
+
+// Criamos o componente Animated.ScrollView a partir do seu ScrollView base.
+const AnimatedScrollView = Animated.createAnimatedComponent(UIScrollView);
 
 type RefreshScrollViewProps = {
   children: React.ReactNode;
   onRefresh?: () => Promise<void>; // Opcional, para telas que não precisam de refresh
-  scrollViewProps?: ScrollViewProps;
+  scrollViewProps?: ScrollViewProps; // O tipo ScrollViewProps já é suficiente
 };
 
 // Componente para garantir Scroll, Pull-to-Refresh e Background
@@ -38,7 +43,8 @@ export function RefreshScrollView({
   }, [onRefresh]);
 
   return (
-    <ScrollView
+    // Usamos o AnimatedScrollView para que a prop onScroll com Animated.event funcione corretamente
+    <AnimatedScrollView
       {...scrollViewProps}
       className={`flex-1 ${bgColor}`}
       refreshControl={
@@ -53,6 +59,6 @@ export function RefreshScrollView({
       }
     >
       {children}
-    </ScrollView>
+    </AnimatedScrollView>
   );
 }
