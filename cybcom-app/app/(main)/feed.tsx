@@ -1,81 +1,75 @@
-import React, { useState, useRef, useEffect } from 'react'; // <-- Adicionado useEffect
+import React, { useState, useRef } from 'react';
 import { 
   View, 
   Animated, 
-  Platform, 
-  NativeSyntheticEvent,
-  NativeScrollEvent
+  NativeSyntheticEvent, 
+  NativeScrollEvent 
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+// Componentes do Projeto
 import { TopHeader } from '@/components/TopHeader';
 import { BottomNav } from '@/components/BottomNav';
 import { RefreshScrollView } from '@/components/RefreshScrollView';
+import { StatusBarBlur } from '@/components/StatusBarBlur';
+
+// UI Components (Gluestack/NativeWind)
 import { Box } from '@/components/ui/box';
 import { Text } from '@/components/ui/text';
-import { useSafeAreaInsets } from 'react-native-safe-area-context'; 
+import { Avatar, AvatarFallbackText, AvatarImage } from '@/components/ui/avatar';
+import { HStack } from '@/components/ui/hstack';
+import { VStack } from '@/components/ui/vstack';
+// CORREÇÃO AQUI: Trocamos HeartIcon por FavouriteIcon
+import { Icon, ThreeDotsIcon, FavouriteIcon, MessageCircleIcon, ShareIcon } from '@/components/ui/icon';
 
 export default function FeedScreen() {
   const [activeTab, setActiveTab] = useState<'forYou' | 'following'>('forYou');
   
-  const scrollY = useRef(new Animated.Value(0)).current; 
-  const headerTranslateY = useRef(new Animated.Value(0)).current; 
+  const headerTranslateY = useRef(new Animated.Value(0)).current;
+  const lastScrollY = useRef(0);
+  const isHeaderHidden = useRef(false);
   
   const insets = useSafeAreaInsets();
-  const HEADER_HEIGHT = 110; 
-  const HEADER_HEIGHT_COMPENSATE = HEADER_HEIGHT + insets.top; 
+  const HEADER_HEIGHT = 120;
+  const FULL_HEADER_HEIGHT = HEADER_HEIGHT + insets.top;
+  const SCROLL_THRESHOLD = 5;
 
-  const lastScrollY = useRef(0);
-  
-  // Ref para armazenar o valor numérico atual (sincronizado) da animação
-  const headerTranslateYValue = useRef(0); 
+  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const currentScrollY = event.nativeEvent.contentOffset.y;
+    const diff = currentScrollY - lastScrollY.current;
 
-  // Efeito para sincronizar o valor animado com a ref (solução segura para o erro de tipagem)
-  useEffect(() => {
-    const id = headerTranslateY.addListener((value) => {
-      headerTranslateYValue.current = value.value;
-    });
-    return () => headerTranslateY.removeListener(id);
-  }, [headerTranslateY]); // O array de dependências garante que o listener seja atualizado corretamente
+    if (Math.abs(diff) < SCROLL_THRESHOLD) return;
 
-  const handleScroll = Animated.event(
-    [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-    {
-      useNativeDriver: Platform.OS !== 'web',
-      listener: (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-        const currentScrollY = event.nativeEvent.contentOffset.y;
-        const diff = currentScrollY - lastScrollY.current;
+    const isScrollingDown = diff > 0;
+    const isAtTop = currentScrollY <= HEADER_HEIGHT;
 
-        if (Math.abs(diff) < 3) return; 
-
-        // Agora, usamos a ref sincronizada, que é um number
-        const isHeaderCurrentlyVisible = headerTranslateYValue.current >= 0;
-        
-        const isScrollingDown = diff > 0;
-
-        // 2. Condição para ESCONDER o Header
-        // Esconde se estiver rolando para baixo E o header estiver visível E a rolagem já saiu da área superior
-        if (isScrollingDown && currentScrollY > HEADER_HEIGHT && isHeaderCurrentlyVisible) {
-            Animated.timing(headerTranslateY, {
-                toValue: -HEADER_HEIGHT, // Posição totalmente escondida
-                duration: 200, 
-                useNativeDriver: Platform.OS !== 'web',
-            }).start();
-        }
-        
-        // 3. Condição para MOSTRAR o Header
-        // Mostra se estiver rolando para cima
-        else if (diff < 0) {
-            Animated.timing(headerTranslateY, {
-                toValue: 0, // Posição totalmente visível
-                duration: 200, 
-                useNativeDriver: Platform.OS !== 'web',
-            }).start();
-        }
-
-        // 4. Atualiza a última posição de rolagem
-        lastScrollY.current = currentScrollY;
-      },
+    if (isAtTop) {
+      if (isHeaderHidden.current) {
+        Animated.timing(headerTranslateY, {
+          toValue: 0,
+          duration: 250,
+          useNativeDriver: true,
+        }).start();
+        isHeaderHidden.current = false;
+      }
+    } else if (isScrollingDown && !isHeaderHidden.current) {
+      Animated.timing(headerTranslateY, {
+        toValue: -FULL_HEADER_HEIGHT,
+        duration: 250,
+        useNativeDriver: true,
+      }).start();
+      isHeaderHidden.current = true;
+    } else if (!isScrollingDown && isHeaderHidden.current) {
+      Animated.timing(headerTranslateY, {
+        toValue: 0,
+        duration: 250,
+        useNativeDriver: true,
+      }).start();
+      isHeaderHidden.current = false;
     }
-  );
+
+    lastScrollY.current = currentScrollY;
+  };
 
   const onScrollRefresh = () => {
     return new Promise<void>((resolve) => {
@@ -88,10 +82,11 @@ export default function FeedScreen() {
 
   return (
     <View className="flex-1 bg-black">
+      <StatusBarBlur />
+      
       <TopHeader 
         activeTab={activeTab} 
         onChangeTab={setActiveTab} 
-        scrollY={scrollY} 
         headerTranslateY={headerTranslateY} 
       />
 
@@ -99,25 +94,60 @@ export default function FeedScreen() {
         onRefresh={onScrollRefresh}
         scrollViewProps={{
           onScroll: handleScroll,
-          scrollEventThrottle: 16, 
-          contentContainerStyle: { paddingTop: HEADER_HEIGHT_COMPENSATE },
+          scrollEventThrottle: 16,
+          contentContainerStyle: { 
+            paddingTop: FULL_HEADER_HEIGHT + 10, 
+            paddingBottom: 100 
+          },
         }}
       >
-        <View className="flex-1 bg-black min-h-screen">
-          <Box className="p-4">
-            {activeTab === 'forYou' ? (
-              <Text className="text-white text-3xl">Conteúdo Para Você</Text>
-            ) : (
-              <Text className="text-white text-3xl">Conteúdo Seguindo</Text>
-            )}
-            {/* Simulação de conteúdo longo para rolar */}
-            {Array.from({ length: 50 }).map((_, i) => (
-              <Text key={i} className="text-slate-500 py-2">
-                Item de Feed {i + 1}
-              </Text>
+        <Box className="flex-1 min-h-screen bg-black">
+          <Box className="px-0">
+            {Array.from({ length: 20 }).map((_, i) => (
+              <Box key={i} className="mb-1 border-b border-outline-800 py-3 px-4">
+                <HStack space="md" className="items-start">
+                   <Avatar size="sm" className="bg-primary-600">
+                    <AvatarFallbackText>U{i}</AvatarFallbackText>
+                    <AvatarImage 
+                      source={{ uri: `https://i.pravatar.cc/150?u=${i}` }} 
+                    />
+                  </Avatar>
+                  
+                  <VStack className="flex-1">
+                    <HStack className="justify-between items-center">
+                        <HStack space="xs" className="items-center">
+                            <Text className="text-white font-bold text-base">User {i + 1}</Text>
+                            <Text className="text-typography-400 text-sm">@user_{i + 1} · 2h</Text>
+                        </HStack>
+                        <Icon as={ThreeDotsIcon} className="text-typography-400" size="sm" />
+                    </HStack>
+
+                    <Text className="text-white text-base mt-1 mb-2 leading-6">
+                      Este é um exemplo de post número {i + 1}. O comportamento de scroll deste feed deve esconder o header ao descer e mostrar ao subir.
+                    </Text>
+
+                    <HStack className="justify-between mt-2 pr-8">
+                        <HStack space="xs" className="items-center">
+                            <Icon as={MessageCircleIcon} className="text-typography-400" size="sm" />
+                            <Text className="text-typography-400 text-xs">12</Text>
+                        </HStack>
+                        <HStack space="xs" className="items-center">
+                             <Icon as={ShareIcon} className="text-typography-400" size="sm" />
+                             <Text className="text-typography-400 text-xs">5</Text>
+                        </HStack>
+                        <HStack space="xs" className="items-center">
+                            {/* CORREÇÃO AQUI: Usando FavouriteIcon */}
+                            <Icon as={FavouriteIcon} className="text-typography-400" size="sm" />
+                            <Text className="text-typography-400 text-xs">84</Text>
+                        </HStack>
+                        <Icon as={ShareIcon} className="text-typography-400" size="sm" />
+                    </HStack>
+                  </VStack>
+                </HStack>
+              </Box>
             ))}
           </Box>
-        </View>
+        </Box>
       </RefreshScrollView>
 
       <BottomNav />
