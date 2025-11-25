@@ -3,9 +3,10 @@ import { View, TouchableOpacity, StyleSheet, Image, TextStyle } from 'react-nati
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Stack } from 'expo-router';
 import { useSharedValue, useAnimatedScrollHandler } from 'react-native-reanimated';
+import { useColorScheme } from 'nativewind'; // Importar para controlar estilos manuais
 
 // Componentes
-import { TopHeader } from '@/components/TopHeader'; // Importando o Header Universal
+import { TopHeader } from '@/components/TopHeader';
 import { BottomNav } from '@/components/BottomNav';
 import { RefreshScrollView } from '@/components/RefreshScrollView';
 import { StatusBarBlur } from '@/components/StatusBarBlur';
@@ -20,12 +21,12 @@ import { Icon, ThreeDotsIcon, FavouriteIcon, MessageCircleIcon, ShareIcon } from
 
 export default function FeedScreen() {
   const [activeTab, setActiveTab] = useState<'forYou' | 'following'>('forYou');
+  const { colorScheme } = useColorScheme();
   
   const insets = useSafeAreaInsets();
-  const HEADER_HEIGHT = 88; // 44 (Topo) + 44 (Abas)
+  const HEADER_HEIGHT = 88;
   const FULL_HEADER_HEIGHT = HEADER_HEIGHT + insets.top;
 
-  // --- Lógica de Animação ---
   const headerTranslateY = useSharedValue(0);
   const lastScrollY = useSharedValue(0);
 
@@ -59,26 +60,26 @@ export default function FeedScreen() {
     });
   };
 
-  // Helper de estilos para as abas
+  // Estilos das abas (precisam ser manuais pois estão em style={{...}})
   const getTextStyle = (isActive: boolean): TextStyle => ({
-    color: isActive ? '#FFFFFF' : '#71767B', 
+    color: isActive 
+      ? (colorScheme === 'dark' ? '#FFFFFF' : '#000000') // Ativo: Branco(Dark) ou Preto(Light)
+      : '#71767B', // Inativo: Cinza
     fontWeight: isActive ? '700' : '500',
     fontSize: 15,
   });
 
   return (
-    <View className="flex-1 bg-black">
+    // 1. CORREÇÃO: bg-white no claro, bg-black no escuro
+    <View className="flex-1 bg-white dark:bg-black">
       <Stack.Screen options={{ headerShown: false }} />
       <StatusBarBlur />
       
-      {/* --- TOP HEADER UNIVERSAL --- */}
       <TopHeader 
         headerTranslateY={headerTranslateY}
         fullHeight={FULL_HEADER_HEIGHT}
-        // 1. Passamos as Abas como conteúdo inferior
         bottomContent={
           <View style={styles.tabsRow}>
-             {/* Aba Para Você */}
              <TouchableOpacity
                onPress={() => setActiveTab('forYou')}
                style={styles.tab}
@@ -90,7 +91,6 @@ export default function FeedScreen() {
                </View>
              </TouchableOpacity>
 
-             {/* Aba Seguindo */}
              <TouchableOpacity
                onPress={() => setActiveTab('following')}
                style={styles.tab}
@@ -104,7 +104,6 @@ export default function FeedScreen() {
           </View>
         }
       >
-        {/* 2. Passamos o Logo como conteúdo central (children) */}
         <Image 
            source={require('../../assets/images/logo-cybcom-sem-fundoPNG.png')} 
            style={{ width: 28, height: 28 }}
@@ -123,10 +122,11 @@ export default function FeedScreen() {
           },
         }}
       >
-        <Box className="flex-1 min-h-screen bg-black">
+        {/* 2. CORREÇÃO: Fundo da lista */}
+        <Box className="flex-1 min-h-screen bg-white dark:bg-black">
           <Box className="px-0">
             {Array.from({ length: 20 }).map((_, i) => (
-              <Box key={i} className="mb-1 border-b border-outline-800 py-4 px-4">
+              <Box key={i} className="mb-1 border-b border-outline-100 dark:border-outline-800 py-4 px-4">
                 <HStack space="md" className="items-start">
                    <Avatar size="sm" className="bg-primary-600">
                     <AvatarFallbackText>U{i}</AvatarFallbackText>
@@ -138,14 +138,15 @@ export default function FeedScreen() {
                   <VStack className="flex-1">
                     <HStack className="justify-between items-center mb-1">
                         <HStack space="xs" className="items-center">
-                            <Text className="text-white font-bold text-base">User {i + 1}</Text>
-                            <Text className="text-typography-400 text-sm">@usuario_{i + 1} · 2h</Text>
+                            {/* 3. CORREÇÃO: Cores dos textos do post */}
+                            <Text className="text-black dark:text-white font-bold text-base">User {i + 1}</Text>
+                            <Text className="text-typography-500 dark:text-typography-400 text-sm">@usuario_{i + 1} · 2h</Text>
                         </HStack>
                         <Icon as={ThreeDotsIcon} className="text-typography-400" size="sm" />
                     </HStack>
 
-                    <Text className="text-white text-base leading-6 mb-3">
-                      Post {i + 1}. Agora o TopHeader é universal e suas abas verdes (#64FFDA) estão perfeitas! 🚀
+                    <Text className="text-black dark:text-white text-base leading-6 mb-3">
+                      Post {i + 1}. O tema agora se adapta automaticamente! No modo claro, fundo branco e texto preto. No escuro, fundo preto e texto branco. 🚀
                     </Text>
 
                     <HStack className="justify-between pr-8">
@@ -199,7 +200,7 @@ const styles = StyleSheet.create({
     bottom: 0, 
     width: 56, 
     height: 4, 
-    backgroundColor: '#64FFDA', // Verde Neon
+    backgroundColor: '#64FFDA', 
     borderRadius: 2, 
   }
 });

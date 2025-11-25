@@ -1,11 +1,12 @@
 import React, { useState, useCallback } from "react";
 import { RefreshControl, ScrollViewProps } from "react-native";
 import Animated from "react-native-reanimated";
+import { useColorScheme } from "nativewind"; // Importar hook do tema
 
 type RefreshScrollViewProps = {
   children: React.ReactNode;
   onRefresh?: () => Promise<void>;
-  scrollViewProps?: ScrollViewProps & { onScroll?: any; scrollEventThrottle?: number }; // Tipagem flexível para o Reanimated
+  scrollViewProps?: ScrollViewProps & { onScroll?: any; scrollEventThrottle?: number }; 
 };
 
 export function RefreshScrollView({
@@ -14,6 +15,8 @@ export function RefreshScrollView({
   scrollViewProps,
 }: RefreshScrollViewProps) {
   const [refreshing, setRefreshing] = useState(false);
+  const { colorScheme } = useColorScheme(); // Detectar tema
+  const isDark = colorScheme === "dark";
 
   const handleRefresh = useCallback(async () => {
     if (onRefresh) {
@@ -31,16 +34,20 @@ export function RefreshScrollView({
   return (
     <Animated.ScrollView
       {...scrollViewProps}
-      // Garante flex: 1 e fundo preto, mesclando com estilos externos se houver
-      style={[{ flex: 1, backgroundColor: '#000' }, scrollViewProps?.style]}
+      // CORREÇÃO: Fundo dinâmico (Branco no claro, Preto no escuro)
+      style={[
+        { flex: 1, backgroundColor: isDark ? '#000' : '#fff' }, 
+        scrollViewProps?.style
+      ]}
       refreshControl={
         onRefresh ? (
           <RefreshControl
             refreshing={refreshing}
             onRefresh={handleRefresh}
-            tintColor="#fff"
-            colors={["#fff"]}
-            progressBackgroundColor="#1a1a1a"
+            // Cores do spinner adaptáveis
+            tintColor={isDark ? "#fff" : "#000"}
+            colors={[isDark ? "#fff" : "#000"]}
+            progressBackgroundColor={isDark ? "#1a1a1a" : "#f1f1f1"}
           />
         ) : undefined
       }

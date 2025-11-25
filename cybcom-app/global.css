@@ -1,3 +1,92 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* --- DEFINIÇÃO DE CORES --- */
+:root {
+    /* MODO CLARO (LIGHT MODE) */
+    --color-primary-500: 37 99 235;
+    /* Blue 600 */
+    --color-primary-600: 29 78 216;
+
+    --color-secondary-500: 71 85 105;
+
+    /* Backgrounds Claros */
+    --color-background-0: 255 255 255;
+    --color-background-50: 248 250 252;
+    --color-background-100: 241 245 249;
+    --color-background-500: 255 255 255;
+    --color-background-800: 30 41 59;
+    --color-background-900: 15 23 42;
+    --color-background-950: 2 6 23;
+
+    --color-background-light: 251 251 251;
+    --color-background-dark: 24 23 25;
+
+    /* Typography Escura (para fundo claro) */
+    --color-typography-0: 2 6 23;
+    /* Quase preto */
+    --color-typography-50: 15 23 42;
+    --color-typography-100: 30 41 59;
+    --color-typography-200: 51 65 85;
+    --color-typography-300: 71 85 105;
+    --color-typography-400: 100 116 139;
+    --color-typography-500: 148 163 184;
+    --color-typography-600: 203 213 225;
+    --color-typography-700: 226 232 240;
+    --color-typography-800: 241 245 249;
+    --color-typography-900: 248 250 252;
+    --color-typography-950: 255 255 255;
+
+    --color-typography-black: 24 23 24;
+    --color-typography-white: 255 255 255;
+    --color-typography-gray: 212 212 212;
+
+    --color-outline-500: 226 232 240;
+    /* Bordas claras */
+}
+
+.dark {
+    /* MODO ESCURO (DARK MODE - Mantendo identidade atual) */
+    --color-primary-500: 100 255 218;
+    /* Seu Verde Neon (#64FFDA) aprox em RGB: 100 255 218 */
+    --color-primary-600: 20 184 166;
+
+    --color-secondary-500: 148 163 184;
+
+    /* Backgrounds Escuros */
+    --color-background-0: 24 23 24;
+    /* #181718 */
+    --color-background-50: 30 41 59;
+    --color-background-100: 15 23 42;
+    --color-background-500: 0 0 0;
+    /* Preto total */
+    --color-background-800: 255 255 255;
+    --color-background-900: 248 250 252;
+    --color-background-950: 241 245 249;
+
+    --color-background-light: 251 251 251;
+    --color-background-dark: 24 23 25;
+
+    /* Typography Clara (para fundo escuro) */
+    --color-typography-0: 255 255 255;
+    /* Branco */
+    --color-typography-50: 248 250 252;
+    --color-typography-100: 241 245 249;
+    --color-typography-200: 226 232 240;
+    --color-typography-300: 203 213 225;
+    --color-typography-400: 148 163 184;
+    --color-typography-500: 100 116 139;
+    --color-typography-600: 71 85 105;
+    --color-typography-700: 51 65 85;
+    --color-typography-800: 30 41 59;
+    --color-typography-900: 15 23 42;
+    --color-typography-950: 2 6 23;
+
+    --color-typography-black: 24 23 24;
+    --color-typography-white: 255 255 255;
+    --color-typography-gray: 212 212 212;
+
+    --color-outline-500: 47 51 54;
+    /* Bordas escuras */
+}

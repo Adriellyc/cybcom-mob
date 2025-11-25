@@ -1,5 +1,3 @@
-// cybcom-app/components/SideMenu.tsx
-
 import React from "react";
 import { View, Image, Pressable, Alert } from "react-native";
 import {
@@ -12,6 +10,7 @@ import { Button, ButtonText } from "@/components/ui/button";
 import { router, usePathname } from "expo-router";
 import { useColorScheme } from "nativewind";
 import { useAuthStore } from "@/app/store/useAuthStore";
+import { ThemeSwitcher } from './ThemeSwitcher';
 
 import {
   User,
@@ -27,13 +26,13 @@ import {
 
 // Itens de navegação (rotas na pasta app/(app)/)
 const navItems = [
-  { label: "Feed", path: "/(app)/feed", icon: Code },
-  { label: "Novo Post", path: "/(app)/newpost", icon: MessageSquarePlus },
-  { label: "Perfil", path: "/(app)/profile", icon: User },
-  { label: "Notificações", path: "/(app)/notification", icon: Bell },
-  { label: "Loja (Cursos)", path: "/(app)/store", icon: ShoppingBag },
-  { label: "Sobre", path: "/(app)/about", icon: Info },
-  { label: "Admin (Dashboard)", path: "/(app)/admin", icon: Shield },
+  { label: "Feed", path: "/(main)/feed", icon: Code },
+  { label: "Novo Post", path: "/(main)/newpost", icon: MessageSquarePlus },
+  { label: "Perfil", path: "/(main)/profile", icon: User },
+  { label: "Notificações", path: "/(main)/notification", icon: Bell },
+  { label: "Loja (Cursos)", path: "/(main)/store", icon: ShoppingBag },
+  { label: "Sobre", path: "/(main)/about", icon: Info },
+  { label: "Admin (Dashboard)", path: "/(main)/admin", icon: Shield },
 ] as const;
 
 type ValidNavPath = (typeof navItems)[number]["path"];
@@ -159,6 +158,8 @@ export default function SideMenu(props: DrawerContentComponentProps) {
             />
           ))}
         </View>
+
+        <ThemeSwitcher />
 
         {/* --- RODAPÉ / AÇÕES --- */}
         <View>
