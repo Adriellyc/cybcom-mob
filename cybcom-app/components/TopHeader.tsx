@@ -1,27 +1,46 @@
 import React from 'react';
-import { Platform, TouchableOpacity, StyleSheet, View, TextStyle, Image } from 'react-native';
+import { View, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import Animated, { useAnimatedStyle, SharedValue, interpolate, Extrapolation } from 'react-native-reanimated';
+import { useNavigation } from 'expo-router';
+import { DrawerActions } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BlurView } from 'expo-blur';
-import { Text } from '@/components/ui/text'; 
+import { Avatar, AvatarImage, AvatarFallbackText } from '@/components/ui/avatar';
 
 interface TopHeaderProps {
-  activeTab: 'forYou' | 'following';
-  onChangeTab: (tab: 'forYou' | 'following') => void;
-  headerTranslateY: SharedValue<number>;
-  fullHeight?: number;
+  children?: React.ReactNode;       // Conteúdo Central (Logo, Título, etc)
+  rightAction?: React.ReactNode;    // Botão da Direita (Opcional)
+  bottomContent?: React.ReactNode;  // Conteúdo de baixo (Abas, Filtros, etc)
+  headerTranslateY?: SharedValue<number>; 
+  fullHeight?: number;              
 }
 
-export function TopHeader({ activeTab, onChangeTab, headerTranslateY, fullHeight = 100 }: TopHeaderProps) {
+export function TopHeader({ 
+  children, 
+  rightAction, 
+  bottomContent, 
+  headerTranslateY, 
+  fullHeight = 100 
+}: TopHeaderProps) {
   const insets = useSafeAreaInsets();
+  const navigation = useNavigation();
 
+  // Função para abrir o Drawer (Menu Lateral)
+  const openDrawer = () => {
+    navigation.dispatch(DrawerActions.openDrawer());
+  };
+
+  // --- ANIMAÇÃO DE MOVIMENTO ---
   const containerStyle = useAnimatedStyle(() => {
+    if (!headerTranslateY) return {};
     return {
       transform: [{ translateY: headerTranslateY.value }],
     };
   });
 
+  // --- ANIMAÇÃO DE TRANSPARÊNCIA ---
   const contentStyle = useAnimatedStyle(() => {
+    if (!headerTranslateY) return { opacity: 1 };
     const opacity = interpolate(
       headerTranslateY.value,
       [-fullHeight * 0.8, 0], 
@@ -31,72 +50,55 @@ export function TopHeader({ activeTab, onChangeTab, headerTranslateY, fullHeight
     return { opacity };
   });
 
-  // Texto: Branco (Ativo) vs Cinza (Inativo)
-  const getTextStyle = (isActive: boolean): TextStyle => ({
-    color: isActive ? '#FFFFFF' : '#71767B', 
-    fontWeight: isActive ? '700' : '500',
-    fontSize: 15,
-  });
-
   return (
     <Animated.View
       style={[
         styles.container,
         { paddingTop: insets.top + 5 },
-        containerStyle, 
+        containerStyle,
       ]}
     >
-       {Platform.OS !== 'web' && (
-        <BlurView
-            intensity={90}
-            tint="dark"
-            style={StyleSheet.absoluteFill}
-        />
-        )}
+      {/* Fundo Vidro (Blur) */}
+      {Platform.OS !== 'web' && (
+        <BlurView intensity={90} tint="dark" style={StyleSheet.absoluteFill} />
+      )}
 
-      <Animated.View style={[styles.contentContainer, contentStyle]}>
+      <Animated.View style={[styles.contentWrapper, contentStyle]}>
         
-        {/* LOGO */}
-        <View style={styles.logoContainer}>
-          <Image 
-            source={require('../assets/images/logo-cybcom-sem-fundoPNG.png')} 
-            style={styles.logo}
-            resizeMode="contain"
-          />
+        {/* === LINHA SUPERIOR (Avatar | Centro | Ação) === */}
+        <View style={styles.topRow}>
+          
+          {/* ESQUERDA: Avatar */}
+          <View style={styles.sideItem}>
+            <TouchableOpacity onPress={openDrawer} activeOpacity={0.7}>
+              <Avatar size="md" className="bg-gray-700">
+                {/* Substitua pela imagem real do usuário */}
+                <AvatarFallbackText>U</AvatarFallbackText>
+                <AvatarImage 
+                  source={{ uri: "https://github.com/ewayrton.png" }} 
+                  alt="Perfil"
+                />
+              </Avatar>
+            </TouchableOpacity>
+          </View>
+
+          {/* CENTRO: Onde vai o Logo ou Título */}
+          <View style={styles.centerItem}>
+            {children}
+          </View>
+
+          {/* DIREITA: Espaço ou Botão */}
+          <View style={[styles.sideItem, { alignItems: 'flex-end' }]}>
+            {rightAction ? rightAction : <View style={{ width: 32 }} />} 
+          </View>
         </View>
 
-        {/* ABAS */}
-        <View style={styles.tabsRow}>
-          {/* Botão PARA VOCÊ */}
-          <TouchableOpacity
-            onPress={() => onChangeTab('forYou')}
-            style={styles.tab}
-            activeOpacity={0.7}
-          >
-            <View style={styles.tabContent}>
-              <Text style={getTextStyle(activeTab === 'forYou')}>
-                Para você
-              </Text>
-              {/* TRAÇO #64FFDA */}
-              {activeTab === 'forYou' && <View style={styles.indicator} />}
-            </View>
-          </TouchableOpacity>
-
-          {/* Botão SEGUINDO */}
-          <TouchableOpacity
-            onPress={() => onChangeTab('following')}
-            style={styles.tab}
-            activeOpacity={0.7}
-          >
-            <View style={styles.tabContent}>
-              <Text style={getTextStyle(activeTab === 'following')}>
-                Seguindo
-              </Text>
-              {/* TRAÇO #64FFDA */}
-              {activeTab === 'following' && <View style={styles.indicator} />}
-            </View>
-          </TouchableOpacity>
-        </View>
+        {/* === LINHA INFERIOR (Abas opcionais) === */}
+        {bottomContent && (
+          <View style={styles.bottomRow}>
+            {bottomContent}
+          </View>
+        )}
 
       </Animated.View>
     </Animated.View>
@@ -106,49 +108,32 @@ export function TopHeader({ activeTab, onChangeTab, headerTranslateY, fullHeight
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 1000,
+    top: 0, left: 0, right: 0, zIndex: 1000,
     backgroundColor: 'rgba(0,0,0,0.75)', 
     borderBottomWidth: 1,
     borderBottomColor: '#2F3336', 
   },
-  contentContainer: {
-    paddingBottom: 0, 
+  contentWrapper: {
+    paddingBottom: 0,
   },
-  logoContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: 44, 
-  },
-  logo: {
-    width: 28, 
-    height: 28,
-  },
-  tabsRow: {
+  topRow: {
+    height: 44, // Altura padrão da linha superior
     flexDirection: 'row',
     alignItems: 'center',
-    height: 44, 
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
   },
-  tab: {
+  bottomRow: {
+    height: 44, // Altura padrão das abas
+    width: '100%',
+  },
+  sideItem: {
+    width: 40, 
+    justifyContent: 'center',
+  },
+  centerItem: {
     flex: 1,
-    height: '100%',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  tabContent: {
-    height: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'relative',
-  },
-  indicator: {
-    position: 'absolute',
-    bottom: 0, 
-    width: 56, 
-    height: 4, 
-    backgroundColor: '#64FFDA', // <--- COR ALTERADA AQUI
-    borderRadius: 2, 
   }
 });

@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { View } from 'react-native';
+import { View, TouchableOpacity, StyleSheet, Image, TextStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Stack } from 'expo-router';
 import { useSharedValue, useAnimatedScrollHandler } from 'react-native-reanimated';
 
-// Componentes do Projeto
-import { TopHeader } from '@/components/TopHeader';
+// Componentes
+import { TopHeader } from '@/components/TopHeader'; // Importando o Header Universal
 import { BottomNav } from '@/components/BottomNav';
 import { RefreshScrollView } from '@/components/RefreshScrollView';
 import { StatusBarBlur } from '@/components/StatusBarBlur';
@@ -22,31 +22,22 @@ export default function FeedScreen() {
   const [activeTab, setActiveTab] = useState<'forYou' | 'following'>('forYou');
   
   const insets = useSafeAreaInsets();
-  const HEADER_HEIGHT = 110;
-  // A altura total que o header precisa percorrer para sumir
+  const HEADER_HEIGHT = 88; // 44 (Topo) + 44 (Abas)
   const FULL_HEADER_HEIGHT = HEADER_HEIGHT + insets.top;
 
-  // Valores compartilhados (Reanimated)
+  // --- Lógica de Animação ---
   const headerTranslateY = useSharedValue(0);
   const lastScrollY = useSharedValue(0);
 
-  // --- LÓGICA NOVA: FOLLOW THE FINGER (Segue o Dedo) ---
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: (event) => {
       const currentScrollY = event.contentOffset.y;
       const diff = currentScrollY - lastScrollY.value;
 
-      // Se estivermos no topo absoluto (ou no bounce do iOS), mostre o header
       if (currentScrollY <= 0) {
         headerTranslateY.value = 0;
       } else {
-        // Calcula a nova posição baseada no movimento do dedo
-        // Se diff > 0 (descendo), subtraímos (header sobe)
-        // Se diff < 0 (subindo), somamos (header desce)
         const newTranslateY = headerTranslateY.value - diff;
-
-        // O segredo é limitar (Clamp) o valor entre:
-        // -FULL_HEADER_HEIGHT (totalmente escondido) e 0 (totalmente visível)
         if (newTranslateY < -FULL_HEADER_HEIGHT) {
           headerTranslateY.value = -FULL_HEADER_HEIGHT;
         } else if (newTranslateY > 0) {
@@ -55,7 +46,6 @@ export default function FeedScreen() {
           headerTranslateY.value = newTranslateY;
         }
       }
-
       lastScrollY.value = currentScrollY;
     },
   });
@@ -69,17 +59,58 @@ export default function FeedScreen() {
     });
   };
 
+  // Helper de estilos para as abas
+  const getTextStyle = (isActive: boolean): TextStyle => ({
+    color: isActive ? '#FFFFFF' : '#71767B', 
+    fontWeight: isActive ? '700' : '500',
+    fontSize: 15,
+  });
+
   return (
     <View className="flex-1 bg-black">
       <Stack.Screen options={{ headerShown: false }} />
       <StatusBarBlur />
       
+      {/* --- TOP HEADER UNIVERSAL --- */}
       <TopHeader 
-        activeTab={activeTab} 
-        onChangeTab={setActiveTab} 
-        headerTranslateY={headerTranslateY} 
-        fullHeight={FULL_HEADER_HEIGHT} // Passamos a altura para calcular a opacidade
-      />
+        headerTranslateY={headerTranslateY}
+        fullHeight={FULL_HEADER_HEIGHT}
+        // 1. Passamos as Abas como conteúdo inferior
+        bottomContent={
+          <View style={styles.tabsRow}>
+             {/* Aba Para Você */}
+             <TouchableOpacity
+               onPress={() => setActiveTab('forYou')}
+               style={styles.tab}
+               activeOpacity={0.7}
+             >
+               <View style={styles.tabContent}>
+                 <Text style={getTextStyle(activeTab === 'forYou')}>Para você</Text>
+                 {activeTab === 'forYou' && <View style={styles.indicator} />}
+               </View>
+             </TouchableOpacity>
+
+             {/* Aba Seguindo */}
+             <TouchableOpacity
+               onPress={() => setActiveTab('following')}
+               style={styles.tab}
+               activeOpacity={0.7}
+             >
+               <View style={styles.tabContent}>
+                 <Text style={getTextStyle(activeTab === 'following')}>Seguindo</Text>
+                 {activeTab === 'following' && <View style={styles.indicator} />}
+               </View>
+             </TouchableOpacity>
+          </View>
+        }
+      >
+        {/* 2. Passamos o Logo como conteúdo central (children) */}
+        <Image 
+           source={require('../../assets/images/logo-cybcom-sem-fundoPNG.png')} 
+           style={{ width: 28, height: 28 }}
+           resizeMode="contain"
+        />
+      </TopHeader>
 
       <RefreshScrollView
         onRefresh={onScrollRefresh}
@@ -103,6 +134,7 @@ export default function FeedScreen() {
                       source={{ uri: `https://i.pravatar.cc/150?u=${i + 10}` }} 
                     />
                   </Avatar>
+                  
                   <VStack className="flex-1">
                     <HStack className="justify-between items-center mb-1">
                         <HStack space="xs" className="items-center">
@@ -111,9 +143,11 @@ export default function FeedScreen() {
                         </HStack>
                         <Icon as={ThreeDotsIcon} className="text-typography-400" size="sm" />
                     </HStack>
+
                     <Text className="text-white text-base leading-6 mb-3">
-                      Post {i + 1}. Agora o header desliza suavemente junto com o seu dedo e o conteúdo vai sumindo! ✨
+                      Post {i + 1}. Agora o TopHeader é universal e suas abas verdes (#64FFDA) estão perfeitas! 🚀
                     </Text>
+
                     <HStack className="justify-between pr-8">
                         <HStack space="xs" className="items-center">
                             <Icon as={MessageCircleIcon} className="text-typography-400" size="sm" />
@@ -141,3 +175,31 @@ export default function FeedScreen() {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  tabsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: 44, 
+  },
+  tab: {
+    flex: 1,
+    height: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tabContent: {
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+  },
+  indicator: {
+    position: 'absolute',
+    bottom: 0, 
+    width: 56, 
+    height: 4, 
+    backgroundColor: '#64FFDA', // Verde Neon
+    borderRadius: 2, 
+  }
+});

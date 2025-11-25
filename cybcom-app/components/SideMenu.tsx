@@ -18,7 +18,6 @@ import {
   Bell,
   Info,
   LogOut,
-  X,
   Shield,
   Code,
   MessageSquarePlus,
@@ -131,7 +130,7 @@ export default function SideMenu(props: DrawerContentComponentProps) {
         {/* --- HEADER DO MENU --- */}
         <Box className="flex-row items-center px-3 mb-8">
           <Image
-            source={require("../assets/images/icon.png")}
+            source={{ uri: "https://github.com/ewayrton.png" }}//trocar pela imagem do usuário
             className="w-12 h-12 rounded-full border-2 border-blue-400"
           />
           <Box className="ml-3">
@@ -173,21 +172,11 @@ export default function SideMenu(props: DrawerContentComponentProps) {
             <ButtonText className="text-red-500 dark:text-red-400">
               Sair
             </ButtonText>
-          </Button>
 
-          <Button
-            className="w-full"
-            variant="outline"
-            action="secondary"
-            onPress={() => navigation.closeDrawer()}
-          >
-            <X color={inactiveIcon} size={18} style={{ marginRight: 8 }} />
-            <ButtonText className="text-slate-600 dark:text-slate-400">
-              Fechar Menu
-            </ButtonText>
           </Button>
         </View>
       </View>
     </DrawerContentScrollView>
   );
 }
+export { SideMenu };

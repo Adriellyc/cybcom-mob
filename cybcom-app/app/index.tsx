@@ -20,8 +20,8 @@ export default function IndexScreen() {
       <Box className="flex-1 items-center justify-center px-8">
         {/* Logo / ícone do app */}
         <Image
-          source={require("../assets/images/icon.png")}
-          style={{ width: 80, height: 80, borderRadius: 20, marginBottom: 24 }}
+          source={require("../assets/images/logo-cybcom-sem-fundoPNG.png")}
+          style={{ width: 60, height: 75, borderRadius: 20, marginBottom: 24 }}
         />
 
         <Text className={`text-3xl font-extrabold mb-2 ${titleColor}`}>

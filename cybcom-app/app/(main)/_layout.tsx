@@ -1,19 +1,37 @@
-import { Stack } from 'expo-router';
+import { Drawer } from 'expo-router/drawer';
 import React from 'react';
+import { SideMenu } from '@/components/SideMenu'; // Certifique-se que este caminho está correto
+import { useWindowDimensions } from 'react-native';
 
 export default function MainLayout() {
+  const dimensions = useWindowDimensions();
+
   return (
-    <Stack
+    <Drawer
+      // Define o seu componente SideMenu como o conteúdo da gaveta
+      drawerContent={(props) => <SideMenu {...props} />}
       screenOptions={{
-        // Desativa cabeçalhos padrão para TODAS as telas desta pasta
+        // Esconde o header padrão do Drawer (pois já temos o TopHeader)
         headerShown: false,
-        // Garante fundo preto (como no design de referência) para transições suaves
-        contentStyle: { backgroundColor: '#000' },
-        // Animação padrão do iOS
-        animation: 'default', 
+        // Configurações visuais da gaveta
+        drawerStyle: {
+          backgroundColor: '#000', // Fundo preto
+          width: dimensions.width * 0.85, // Ocupa 85% da tela
+        },
+        drawerType: 'front', // A gaveta desliza por cima da tela
+        overlayColor: 'rgba(0,0,0,0.7)', // Escurece o fundo
       }}
     >
-      <Stack.Screen name="feed" />
-    </Stack>
+      {/* Aqui definimos as rotas que ficam DENTRO da gaveta.
+        O 'feed' é a tela principal.
+      */}
+      <Drawer.Screen 
+        name="feed" 
+        options={{
+          drawerLabel: 'Início',
+          title: 'Feed',
+        }} 
+      />
+    </Drawer>
   );
 }
