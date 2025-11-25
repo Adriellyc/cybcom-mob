@@ -31,7 +31,7 @@ export default function IndexScreen() {
         <Text
           className={`text-base text-center mb-10 ${subtitleColor}`}
         >
-          Sua comunidade de tecnologia, posts e cursos em um só lugar.
+          Sua comunidade de Cyber Segurança, posts e cursos em um só lugar.
         </Text>
 
         {/* Botão de Login */}

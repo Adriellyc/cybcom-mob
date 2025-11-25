@@ -6,13 +6,14 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   Home,
   Search,
-  CircleOff,
+  Plus, // Novo ícone para New Post
   Bell,
-  Mail,
+  Info, // Novo ícone para Sobre/About
   type LucideIcon,
 } from "lucide-react-native";
 
-type TabKey = "home" | "search" | "spaces" | "notifications" | "messages";
+// Atualizando os tipos das chaves de navegação
+type TabKey = "home" | "search" | "new-post" | "notifications" | "about";
 
 type TabItem = {
   key: TabKey;
@@ -21,11 +22,11 @@ type TabItem = {
 };
 
 const tabs: TabItem[] = [
-  { key: "home",          icon: Home,      path: "/feed" },          // seu feed em (main)
-  { key: "search",        icon: Search,    path: "/search" },        // tela futura
-  { key: "spaces",        icon: CircleOff, path: "/spaces" },        // tela futura
-  { key: "notifications", icon: Bell,      path: "/notification" },  // já existe
-  { key: "messages",      icon: Mail,      path: "/messages" },      // tela futura
+  { key: "home",          icon: Home,      path: "/feed" },          // Feed
+  { key: "search",        icon: Search,    path: "/search" },        // Busca
+  { key: "new-post",      icon: Plus,      path: "/new-post" },      // Novo Post (Central)
+  { key: "notifications", icon: Bell,      path: "/notification" },  // Notificações
+  { key: "about",         icon: Info,      path: "/about" },         // Sobre
 ];
 
 export function BottomNav() {
@@ -39,7 +40,7 @@ export function BottomNav() {
   const borderColor = isDark ? "border-slate-800" : "border-slate-200";
 
   const getIsActive = (path: string) => {
-    // com grupos (main), a rota real é "/feed", "/notification", etc.
+    // Verifica se a rota atual corresponde ao caminho da aba
     return pathname === path || pathname.startsWith(`${path}/`);
   };
 
@@ -56,11 +57,13 @@ export function BottomNav() {
           const active = getIsActive(tab.path);
           const ActiveIcon = tab.icon;
 
+          // Lógica especial para o ícone central (+) se quiser destacá-lo,
+          // ou mantê-lo padrão. Aqui mantive a lógica de cor padrão.
           const iconColor = active
             ? isDark
-              ? "#f9fafb"
-              : "#020617"
-            : "#9ca3af";
+              ? "#f9fafb" // Branco no dark mode
+              : "#020617" // Preto no light mode
+            : "#9ca3af";  // Cinza quando inativo
 
           return (
             <Pressable
@@ -76,9 +79,9 @@ export function BottomNav() {
                     color={iconColor}
                   />
 
-                  {/* Bolinha azul de notificação no ícone Home, igual o X */}
+                  {/* Bolinha de notificação no ícone Home com a cor #64FFDA */}
                   {tab.key === "home" && (
-                    <View className="w-2 h-2 rounded-full bg-sky-500 absolute -top-1 -right-1" />
+                    <View className="w-2 h-2 rounded-full bg-[#64FFDA] absolute -top-1 -right-1" />
                   )}
                 </View>
               </View>
