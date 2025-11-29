@@ -1,6 +1,6 @@
+import { SideMenu } from '@/components/SideMenu'; // Certifique-se que este caminho está correto
 import { Drawer } from 'expo-router/drawer';
 import React from 'react';
-import { SideMenu } from '@/components/SideMenu'; // Certifique-se que este caminho está correto
 import { useWindowDimensions } from 'react-native';
 
 export default function MainLayout() {
