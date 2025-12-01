@@ -30,7 +30,8 @@ export default function IndexScreen() {
         <Button
           className="w-full mb-3"
           action="primary"
-          onPress={() => router.push("/(main)/feed" as any)}
+          onPress={() => router.push("/(main)/login")}
+
         >
           <ButtonText className="text-white dark:text-black text-base font-bold">
             Login
